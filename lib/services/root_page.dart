@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart';
-import 'auth.dart';
-import 'home_page.dart';
+import 'package:artisan_alpha/services/auth.dart';
+import 'package:artisan_alpha/screens/home_page.dart';
+import 'package:artisan_alpha/screens/login_page.dart';
 
 class RootPage extends StatefulWidget {
   RootPage(
@@ -57,6 +57,10 @@ class _RootPageState extends State<RootPage> {
         return HomePage(
           auth: widget.auth,
           onSignedOut: _signedOut,
+        );
+      default:
+        return Container(
+          child: Text('Error: no sign in status received'),
         );
     }
   }

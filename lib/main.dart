@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'auth.dart';
-import 'root_page.dart';
-import 'selection_page.dart';
+
+//services imports
+import 'package:artisan_alpha/services/auth.dart';
+import 'package:artisan_alpha/services/root_page.dart';
 
 void main() => runApp(MyApp());
 

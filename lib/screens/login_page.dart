@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
-import 'auth.dart';
+import 'package:flutter/services.dart';
+import 'package:artisan_alpha/services/auth.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage(
@@ -13,6 +15,9 @@ class LoginPage extends StatefulWidget {
 }
 
 enum FormType { login, register }
+enum authProblems { UserNotFound, PasswordNotValid, NetworkError }
+authProblems errorType;
+String errorMessage = '';
 
 class _LoginPageState extends State<LoginPage> {
   final formKey = GlobalKey<FormState>();
@@ -39,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  void validateAndSubmit() async {
+  validateAndSubmit() async {
     //called when login button pressed
     if (validateAndSave()) {
       try {
@@ -48,14 +53,57 @@ class _LoginPageState extends State<LoginPage> {
           String userID = await widget.auth.signInWithEmailAndPassword(
               _email, _password); //calls Auth class which implements BaseAuth
           print('Signed in: $userID');
-        } else {
+        } else if (_formType == FormType.register) {
           String userID = await widget.auth
               .createUserWithEmailAndPassword(_email, _password);
           print('Registred user: $userID');
         }
         widget.onSignedIn();
-      } catch (e) {
-        print('Error: $e');
+      } on PlatformException catch (e) {
+        if (Platform.isAndroid) {
+          switch (e.message) {
+            case 'There is no user record corresponding to this identifier. The user may have been deleted.':
+              errorType = authProblems.UserNotFound;
+              setState(() {
+                errorMessage = 'The email/password is incorrect.';
+              });
+              break;
+            case 'The password is invalid or the user does not have a password.':
+              errorType = authProblems.PasswordNotValid;
+              setState(() {
+                errorMessage = 'The email/password is incorrect.';
+              });
+              break;
+            case 'A network error (such as timeout, interrupted connection or unreachable host) has occurred.':
+              errorType = authProblems.NetworkError;
+              break;
+            // ...
+            default:
+              print('Case ${e.message} is not jet implemented');
+          }
+        } else if (Platform.isIOS) {
+          switch (e.code) {
+            case 'Error 17011':
+              errorType = authProblems.UserNotFound;
+              setState(() {
+                errorMessage = 'The account does not exist.';
+              });
+              break;
+            case 'Error 17009':
+              errorType = authProblems.PasswordNotValid;
+              setState(() {
+                errorMessage = 'The email/password is incorrect.';
+              });
+              break;
+            case 'Error 17020':
+              errorType = authProblems.NetworkError;
+              break;
+            // ...
+            default:
+              print('Case ${e.message} is not jet implemented');
+          }
+        }
+        print('The error is $errorType');
       }
     }
   }
@@ -69,6 +117,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void moveToLogin() {
     setState(() {
+      errorMessage = '';
       _formType = FormType.login;
     });
   }
@@ -97,7 +146,7 @@ class _LoginPageState extends State<LoginPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: buildInputs() + buildSubmitButtons(),
                   )),
-            )
+            ),
           ],
         ),
       ),
@@ -236,6 +285,13 @@ class _LoginPageState extends State<LoginPage> {
     if (_formType == FormType.login) {
       return [
         Padding(
+          padding: const EdgeInsets.only(top: 3.0),
+          child: Text(
+            errorMessage,
+            style: TextStyle(color: Colors.red, ),
+          ),
+        ),
+        Padding(
           padding: const EdgeInsets.only(top: 10.0, left: 10.0, right: 10.0),
           child: RaisedButton(
             onPressed: validateAndSubmit,
@@ -246,11 +302,12 @@ class _LoginPageState extends State<LoginPage> {
           ),
         ),
         FlatButton(
-            onPressed: moveToRegister,
-            child: Text(
-              'New user?',
-              style: TextStyle(fontSize: 15.0, color: Colors.white),
-            ))
+          onPressed: moveToRegister,
+          child: Text(
+            'New user?',
+            style: TextStyle(fontSize: 15.0, color: Colors.white),
+          ),
+        ),
       ];
     } else {
       return [
