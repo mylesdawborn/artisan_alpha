@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:artisan_alpha/screens/profile/profile_page.dart';
 import 'package:artisan_alpha/screens/browse/browse_page.dart';
 import 'package:artisan_alpha/screens/message/messages_page.dart';
+import 'package:artisan_alpha/screens/post/posting.dart';
 
 //services imports
 import 'package:artisan_alpha/services/auth.dart';
@@ -21,6 +22,7 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
   final List<Widget> _bottomNavChildren = [
     BrowsePage(),
+    PostingPage(),
     MessagesPage(),
     ProfilePage(),
   ];
@@ -51,12 +53,18 @@ class _HomePageState extends State<HomePage> {
       ),  */
       body: _bottomNavChildren[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        fixedColor: Colors.indigo[900],
         onTap: onTabTapped,
         currentIndex: _currentIndex,
         items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
             title: Text('Browse'),
+          ),
+                    BottomNavigationBarItem(
+            icon: Icon(Icons.add_circle_outline),
+            title: Text('Post')
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.message),
